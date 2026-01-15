@@ -32,8 +32,8 @@ function cost = Sim_ResSystem(Tsim,Ts,VDC,w,A_ref,t_settling,beta_c,Ad,Bd,Ard,Br
     Av_vec = V_ref *ones(N,1);
     Av_vec(t >= t_step) = V_ref;
     
-    V_alpha = Av_vec .* env .* sin(w*t); V_beta  = Av_vec .* env .* cos(w*t);
-    V_ref   = [V_alpha V_beta];
+    V_alpha = Av_vec .* env .* sin(w*t);
+    V_ref   = [V_alpha];
     
     for k = 1:N
     

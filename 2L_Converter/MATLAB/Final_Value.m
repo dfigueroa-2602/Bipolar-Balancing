@@ -18,17 +18,26 @@ function [Kx, Kr, Ku, Ki] = Final_Value(Res_mode,b_swarm,w,w_vec,A_aug,B_aug,nx,
     if Res_mode == 1
         % Resonant case
         states_per_h = nxr / n_h;
-
-        % Split p_best p
-        idx_x_end = nx/2; idx_u_end = idx_x_end + nu/2;
+        if mod(nx,2) == 0
+            % Split best particle
+            idx_x_end = nx/2; idx_u_end = idx_x_end + nu/2;
+        else
+            % Use the complete particle
+            idx_x_end = nx; idx_u_end = idx_x_end + nu;
+        end
 
         p_x  = p_best(1:idx_x_end);                  % Plant states (half)
         p_u  = p_best(idx_x_end+1:idx_u_end);        % Plant inputs (half)
         p_hr = p_best(idx_u_end+1:idx_u_end+n_h);    % 1 scalar per harmonic
 
-        % Duplication of each p_best to construct the Q matrix
-        Qx = repelem(p_x,2); Qu = repelem(p_u,2);
-        if isrow(Qu), Qu = Qu'; end
+        if mod(nx,2) == 0
+            % Duplication of each particle to construct the Q matrix
+            Qx = repelem(p_x,2); Qu = repelem(p_u,2);
+            if isrow(Qu), Qu = Qu'; end
+        else
+            Qx = p_x; Qu = p_u;
+            if isrow(Qu), Qu = Qu'; end
+        end
 
         % Construction of the resonant Q with Bryson scaling ----
         Qr_vec = zeros(nxr,1);
@@ -79,8 +88,11 @@ function [Kx, Kr, Ku, Ki] = Final_Value(Res_mode,b_swarm,w,w_vec,A_aug,B_aug,nx,
     % Split K = [Kx Ku Ki]
     Kx = K(:, 1:nx);
     Ku = K(:, nx+1 : nx+nu);     % gain on xu (input-state)
-    % Ki exists but you did not request it as an output from this function
-    Ki = K(:, nx+nu+1 : nx+2*nu);
-
-    Kr = zeros(size(K,1),0);     % empty resonant gain
+    if Res_mode == 1
+        Kr = K(:, nx+nu+1 : end);
+        Ki = [];
+    else
+        Ki = K(:, nx+nu+1 : nx+2*nu);
+        Kr = [];
+    end
 end

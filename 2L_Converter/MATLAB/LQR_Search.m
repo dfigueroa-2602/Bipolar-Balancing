@@ -3,8 +3,8 @@ function fitness = LQR_Search(Res_mode,Ts,n_h,w_vec,R_mode,particle,...
                               beta_c,VDC,w,A_ref,Tsim,T_settling)
 % Function that injects the given particle into the lqr function, then call
 % the simulation function.
-% Version 0.3
-%   Added the Resonant Mode switch
+% Version 0.4
+%   Added the option for odd number of states
 % Dave Figueroa
 % January 2026
 
@@ -15,17 +15,26 @@ function fitness = LQR_Search(Res_mode,Ts,n_h,w_vec,R_mode,particle,...
         % Resonant case
         nxr = size(Brd,1);
         states_per_h = nxr / n_h;
-
-        % Split particle p
-        idx_x_end = nx/2; idx_u_end = idx_x_end + nu/2;
+        if mod(nx,2) == 0
+            % Split particle p
+            idx_x_end = nx/2; idx_u_end = idx_x_end + nu/2;
+        else
+            % Use the complete particle
+            idx_x_end = nx; idx_u_end = idx_x_end + nu;
+        end
 
         p_x  = particle(1:idx_x_end);                  % Plant states (half)
         p_u  = particle(idx_x_end+1:idx_u_end);        % Plant inputs (half)
         p_hr = particle(idx_u_end+1:idx_u_end+n_h);    % 1 scalar per harmonic
-
-        % Duplication of each particle to construct the Q matrix
-        Qx = repelem(p_x,2); Qu = repelem(p_u,2);
-        if isrow(Qu), Qu = Qu'; end
+        
+        if mod(nx,2) == 0
+            % Duplication of each particle to construct the Q matrix
+            Qx = repelem(p_x,2); Qu = repelem(p_u,2);
+            if isrow(Qu), Qu = Qu'; end
+        else
+            Qx = p_x; Qu = p_u;
+            if isrow(Qu), Qu = Qu'; end
+        end
 
         % Construction of the resonant Q with Bryson scaling ----
         Qr_vec = zeros(nxr,1);
