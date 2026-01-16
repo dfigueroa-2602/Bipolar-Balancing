@@ -85,14 +85,17 @@ function [Kx, Kr, Ku, Ki] = Final_Value(Res_mode,b_swarm,w,w_vec,A_aug,B_aug,nx,
 
     [K,~,~] = dlqr(A_lqr, B_lqr, Q, R);
 
-    % Split K = [Kx Ku Ki]
-    Kx = K(:, 1:nx);
-    Ku = K(:, nx+1 : nx+nu);     % gain on xu (input-state)
     if Res_mode == 1
-        Kr = K(:, nx+nu+1 : end);
+        if mod(nx,2) == 0
+            Kx = K(:,1:idx_x_end*2); Ku = K(:,idx_x_end*2+1:idx_u_end*2);
+            Kr = K(:,idx_u_end*2+1:end);
+        else
+            Kx = K(:,1:idx_x_end); Ku = K(:,idx_x_end+1:idx_u_end);
+            Kr = K(:,idx_u_end+1:end);
+        end
         Ki = [];
     else
-        Ki = K(:, nx+nu+1 : nx+2*nu);
-        Kr = [];
+        Kx = K(:,1:idx_x_end); Ku = K(:,idx_x_end+1:idx_u_end);
+        Kr = zeros(size(K,1),0); Ki = K(:,idx_u_end+1:idx_i_end);
     end
 end

@@ -12,7 +12,6 @@ function [vel_clamp,Kap,swarm,space_range] = Swarm_Init(n_part,R_mode,xi_Mode,nQ
     % Bounds for Q and R
     Q_blk = [-Qmax Qmax];
     Q_blks = repmat(Q_blk, nQ, 1);
-    
     Qvel_clamp = repmat(Qvel_max,nQ,1);
     if xi_Mode == 1
         xi_blk = [0 xi_Max];

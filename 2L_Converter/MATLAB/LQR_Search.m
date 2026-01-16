@@ -3,8 +3,8 @@ function fitness = LQR_Search(Res_mode,Ts,n_h,w_vec,R_mode,particle,...
                               beta_c,VDC,w,A_ref,Tsim,T_settling)
 % Function that injects the given particle into the lqr function, then call
 % the simulation function.
-% Version 0.4
-%   Added the option for odd number of states
+% Version 0.5
+%   - Corrected the gain selectors to accept resonant mode or not resonant.
 % Dave Figueroa
 % January 2026
 
@@ -93,11 +93,16 @@ function fitness = LQR_Search(Res_mode,Ts,n_h,w_vec,R_mode,particle,...
         fitness = 1e6; return;
     end
 
-    Kx = K(:,1:idx_x_end); Ku = K(:,idx_x_end+1:idx_u_end);
-
     if Res_mode == 1
-        Kr = K(:,idx_u_end+1:end);
+        if mod(nx,2) == 0
+            Kx = K(:,1:idx_x_end*2); Ku = K(:,idx_x_end*2+1:idx_u_end*2);
+            Kr = K(:,idx_u_end*2+1:end);
+        else
+            Kx = K(:,1:idx_x_end); Ku = K(:,idx_x_end+1:idx_u_end);
+            Kr = K(:,idx_u_end+1:end);
+        end
     else
+        Kx = K(:,1:idx_x_end); Ku = K(:,idx_x_end+1:idx_u_end);
         Kr = zeros(size(K,1),0); Ki = K(:,idx_u_end+1:idx_i_end);
     end
 
@@ -114,8 +119,7 @@ function fitness = LQR_Search(Res_mode,Ts,n_h,w_vec,R_mode,particle,...
 
     try
         if Res_mode == 1
-            fitness = Sim_ResSystem(Tsim,Ts,VDC,w,A_ref,T_settling,beta_c,...
-                                Ad,Bd,Ard,Brd,Ha,Kx,Kr,Ku);
+            fitness = Sim_ResSystem(Tsim,Ts,VDC,w,A_ref,T_settling,beta_c,Ad,Bd,Ard,Brd,Ha,Kx,Kr,Ku);
         else
             fitness = Sim_AugSystem(Tsim,Ts,VDC,w,A_ref,T_settling,beta_c,...
                          Ad,Bd,Ha,nx,nu,Kx,Ku,Ki);
